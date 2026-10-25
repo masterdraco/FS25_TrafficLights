@@ -50,6 +50,8 @@ local LOG_PREFIX = "[TrafficLights] "
 -- Fundet in-game 25/10 13:28 med tlHeadYaw/tlLamp/tlTopLampYaw; lampScale gør lysskiverne lidt mindre end linserne.
 TLVisuals.tuning = {lamp = {0, 0.0, -0.38}, lampRot = {-90, 90, 0}, lampScale = 0.8, mastYawDeg = 0, headYawDeg = 180,
     armScale = 0.75,
+    -- EU-mastens højde (1 = original, armen i ca. 4,4 m): in-game 25/10 kunne en traktor dårligt køre under armen
+    mastHeight = 1.35,
     lampYawDeg = 180, topLampYawDeg = 270,
     -- wire (US): højde over terræn ved masterne, hovedets ophæng under wiren, wirens tykkelse (skala af mastens
     -- tværsnit), drejning der lægger mastemodellen ned langs wiren, hvor langt ud mod sin indkørsel hvert hoved hænger
@@ -389,14 +391,24 @@ end
 
 -- Armen er længere end vejen (in-game 25/10: den stak ind over modsat vognbane): standeren skaleres langs
 -- armen (lokal +x, masten står i x = 0) og lyshovederne rykkes tilsvarende ind; de beholder deres størrelse.
-local function shortenArm(name, part)
-    local f = TLVisuals.tuning.armScale
+-- Masten gøres også højere (mastHeight): standeren strækkes lodret, og lyshovederne løftes med; de beholder
+-- deres form, så lamperne i dem stadig passer.
+local function shapeMastPart(name, part)
+    local f, h = TLVisuals.tuning.armScale, TLVisuals.tuning.mastHeight
     if name == MAST_BASE_PART then
-        setScale(part, f, 1, 1)
+        setScale(part, f, h, 1)
     elseif HEAD_PARTS[name] then
         local x, y, z = getTranslation(part)
-        setTranslation(part, x * f, y, z)
+        setTranslation(part, x * f, y * h, z)
     end
+end
+
+-- Gadelampen har sit nulpunkt i mastens fod, og dens stang starter, hvor standeren slutter (lige over armen):
+-- den løftes lige så meget, som standerens top flytter sig. Armens højde læses af lyshovedets plads
+-- (in-game 25/10: løft efter lampens midte gav et hul i masten under gadelampen).
+local function topLampLift(a)
+    local _, armY = getTranslation(a.parts.trafficLight01)
+    return (TLVisuals.tuning.mastHeight - 1) * armY
 end
 
 -- Største afstand fra krydsets midte til en stoplinje med lys.
@@ -530,11 +542,12 @@ local function buildMasts(spec, a, layout)
         local mast = {root = root, red = {}, amber = {}, green = {}, signal = nil}
         for _, name in ipairs(MAST_PARTS) do
             local part = clone(a.parts[name], false, false, false)
-            shortenArm(name, part)
+            shapeMastPart(name, part)
             if name == TOP_LAMP_PART then
                 -- gadelampen drejes om masten (gruppen sidder i mastens fod), så den kan hænge ud over vejen
                 local swivel = createTransformGroup("topLamp")
                 link(root, swivel)
+                setTranslation(swivel, 0, topLampLift(a), 0)
                 setRotation(swivel, 0, math.rad(TLVisuals.tuning.topLampYawDeg), 0)
                 link(swivel, part)
             else
@@ -664,6 +677,17 @@ function Tune:arm(factor)
     return "tlArm: sat - se armene"
 end
 
+function Tune:mastHeight(factor)
+    local t = TLVisuals.tuning
+    if factor == nil then return string.format("tlMastHeight %.2f", t.mastHeight) end
+    local value = tonumber(factor)
+    if value == nil or not (value >= 0.8 and value <= 2) then return "tlMastHeight: brug et tal mellem 0.8 og 2, fx 1.35" end
+    t.mastHeight = value
+    if TLVisuals.rebuildAll ~= nil then TLVisuals.rebuildAll() end
+    Logging.info("%stuning: tlMastHeight %.2f", LOG_PREFIX, t.mastHeight)
+    return "tlMastHeight: sat - se masterne"
+end
+
 function Tune:pole(index)
     local s = TLVisuals.tuning.span
     local value = tonumber(index)
@@ -701,6 +725,7 @@ if TLConfig ~= nil and TLConfig.DEBUG and addConsoleCommand ~= nil then
     addConsoleCommand("tlHeadYaw", "Lyskurve-test: tlHeadYaw grader - drej lyshovederne om sig selv", "headYaw", Tune)
     addConsoleCommand("tlLampYaw", "Lyskurve-test: tlLampYaw grader - drej lamperne om hovedets akse", "lampYaw", Tune)
     addConsoleCommand("tlArm", "Lyskurve-test: tlArm faktor - EU-mastens armlængde (1 = original)", "arm", Tune)
+    addConsoleCommand("tlMastHeight", "Lyskurve-test: tlMastHeight faktor - EU-mastens højde (1 = original)", "mastHeight", Tune)
     addConsoleCommand("tlHang", "Lyskurve-test: tlHang x z - ophængsstangens plads i hovedet (m), så den rammer wiren", "hang", Tune)
     addConsoleCommand("tlPole", "Lyskurve-test: tlPole nr - vælg masten til US-wiren (uden tal: vis listen)", "pole", Tune)
     addConsoleCommand("tlSpan", "Lyskurve-test: tlSpan wireHøjde hovedFald tykkelse rotX hovedUd masteDrejning - US-wiren", "span", Tune)

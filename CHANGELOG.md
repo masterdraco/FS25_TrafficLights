@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.2 (2026-10-25)
+- Street lamp on the taller EU mast sits on the pole again (no gap).
+
+## 1.0.1 (2026-10-25)
+- EU masts 35 % taller: the arm with the light heads now clears tractors and trailers (`tlMastHeight` tunes it in debug mode).
+
 ## 1.0.0 (2026-10-25)
 - First release candidate. Debug mode off by default (`tlDebug` toggles the overlay, `tlStatus` logs the state).
 - Proven in game: AutoDrive and map traffic hold at red, 16 AD tractors without collisions, flashing amber
