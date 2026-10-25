@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<modDesc descVersion="107">
+    <author>masterdraco</author>
+    <version>1.0.0.0</version>
+    <title>
+        <en>Traffic Lights</en>
+        <de>Ampeln</de>
+        <da>Lyskryds</da>
+    </title>
+    <description>
+        <en><![CDATA[Traffic lights for intersections. Only one approach gets green at a time, so AutoDrive vehicles and the map's own traffic never lock up in the middle of a crossing.
+
+- Place the control box on a corner of an intersection: the light finds the intersection from the AutoDrive network and sets stop lines far enough back for long trailers to turn - never on a railway crossing.
+- An empty intersection gives green at once; first come, first served; at most 4 vehicles per green while others wait.
+- A vehicle stuck in the intersection for a minute: the light flashes amber and you get a message.
+- European (arm mast at each stop line) and American (span wire over small intersections) versions.
+- Adjust stop lines on foot: Alt+T near the light.
+- Multiplayer supported.
+
+Requires AutoDrive. Base-game helpers and Courseplay's drive to the field also stop on maps with an AI road network.]]></en>
+        <de><![CDATA[Ampeln für Kreuzungen. Immer nur eine Zufahrt bekommt Grün, damit sich AutoDrive-Fahrzeuge und der Kartenverkehr nie mitten in der Kreuzung festfahren.
+
+- Den Schaltkasten an eine Ecke der Kreuzung stellen: die Ampel findet die Kreuzung über das AutoDrive-Netz und setzt Haltelinien so weit zurück, dass lange Anhänger abbiegen können - nie auf einem Bahnübergang.
+- Leere Kreuzung gibt sofort Grün; wer zuerst kommt, fährt zuerst; höchstens 4 Fahrzeuge pro Grünphase, während andere warten.
+- Steckt ein Fahrzeug eine Minute in der Kreuzung fest, blinkt die Ampel gelb und du bekommst eine Meldung.
+- Europäische (Mast an jeder Haltelinie) und amerikanische (Spanndraht über kleinen Kreuzungen) Ausführung.
+- Haltelinien zu Fuß anpassen: Alt+T an der Ampel.
+- Mehrspieler unterstützt.
+
+Benötigt AutoDrive. Helfer des Grundspiels und die Anfahrt von Courseplay halten ebenfalls, auf Karten mit KI-Straßennetz.]]></de>
+        <da><![CDATA[Lyskryds til vejkryds. Kun én indkørsel ad gangen får grønt, så AutoDrive-køretøjer og kortets egen trafik aldrig låser sig fast midt i krydset.
+
+- Sæt styreboksen på et hjørne af krydset: lyskrydset finder krydset ud fra AutoDrive-nettet og sætter stoplinjer så langt tilbage, at lange vogntog kan svinge - aldrig på en jernbaneoverkørsel.
+- Tomt kryds giver grønt med det samme; først til mølle; højst 4 køretøjer pr. grønt, mens andre venter.
+- Sidder et køretøj fast i krydset i et minut, blinker lyset gult, og du får en besked.
+- Europæisk udgave (mast ved hver stoplinje) og amerikansk (wire over små kryds).
+- Justér stoplinjer til fods: Alt+T ved lyskrydset.
+- Multiplayer understøttet.
+
+Kræver AutoDrive. Spillets hjælpere og Courseplays tur ud til marken holder også, på kort med AI-vejnet.]]></da>
+    </description>
+    <iconFilename>icon_trafficLights.dds</iconFilename>
+    <multiplayer supported="true"/>
+
+    <extraSourceFiles>
+        <sourceFile filename="tlConfig.lua"/>
+        <sourceFile filename="tlController.lua"/>
+        <sourceFile filename="tlGeometry.lua"/>
+        <sourceFile filename="tlDemand.lua"/>
+        <sourceFile filename="tlTraffic.lua"/>
+        <sourceFile filename="tlAutoDrive.lua"/>
+        <sourceFile filename="tlCourseplay.lua"/>
+        <sourceFile filename="tlAIDrive.lua"/>
+        <sourceFile filename="tlNet.lua"/>
+        <sourceFile filename="tlVisuals.lua"/>
+        <sourceFile filename="tlLoop.lua"/>
+        <sourceFile filename="tlManager.lua"/>
+        <sourceFile filename="tlEvents.lua"/>
+        <sourceFile filename="tlAdjust.lua"/>
+    </extraSourceFiles>
+
+    <actions>
+        <action name="TL_ADJUST"/>
+        <action name="TL_NEXT"/>
+        <action name="TL_STOP_FORWARD"/>
+        <action name="TL_STOP_BACK"/>
+        <action name="TL_TOGGLE"/>
+        <action name="TL_RESET"/>
+    </actions>
+    <inputBinding>
+        <actionBinding action="TL_ADJUST"><binding device="KB_MOUSE_DEFAULT" input="KEY_lalt KEY_t"/></actionBinding>
+        <actionBinding action="TL_NEXT"><binding device="KB_MOUSE_DEFAULT" input="KEY_lalt KEY_j"/></actionBinding>
+        <actionBinding action="TL_STOP_FORWARD"><binding device="KB_MOUSE_DEFAULT" input="KEY_lalt KEY_i"/></actionBinding>
+        <actionBinding action="TL_STOP_BACK"><binding device="KB_MOUSE_DEFAULT" input="KEY_lalt KEY_k"/></actionBinding>
+        <actionBinding action="TL_TOGGLE"><binding device="KB_MOUSE_DEFAULT" input="KEY_lalt KEY_u"/></actionBinding>
+        <actionBinding action="TL_RESET"><binding device="KB_MOUSE_DEFAULT" input="KEY_lalt KEY_r"/></actionBinding>
+    </inputBinding>
+
+    <placeableSpecializations>
+        <specialization name="trafficLight" className="PlaceableTrafficLight" filename="placeableTrafficLight.lua"/>
+    </placeableSpecializations>
+
+    <placeableTypes>
+        <type name="trafficLight" parent="simplePlaceable" className="Placeable" filename="$dataS/scripts/placeables/Placeable.lua">
+            <specialization name="trafficLight"/>
+        </type>
+    </placeableTypes>
+
+    <storeItems>
+        <storeItem xmlFilename="placeables/trafficLightEU.xml"/>
+        <storeItem xmlFilename="placeables/trafficLightUS.xml"/>
+    </storeItems>
+
+    <l10n>
+        <text name="input_TL_ADJUST"><en>Traffic light: adjust stop lines</en><de>Ampel: Haltelinien anpassen</de><da>Lyskryds: justér stoplinjer</da></text>
+        <text name="input_TL_NEXT"><en>Next approach</en><de>Nächste Zufahrt</de><da>Næste indkørsel</da></text>
+        <text name="input_TL_STOP_FORWARD"><en>Stop line forward</en><de>Haltelinie vor</de><da>Stoplinje frem</da></text>
+        <text name="input_TL_STOP_BACK"><en>Stop line back</en><de>Haltelinie zurück</de><da>Stoplinje tilbage</da></text>
+        <text name="input_TL_TOGGLE"><en>Light on/off</en><de>Ampel an/aus</de><da>Lys til/fra</da></text>
+        <text name="input_TL_RESET"><en>Reset</en><de>Zurücksetzen</de><da>Nulstil</da></text>
+        <text name="tl_adjustApproach"><en>Approach %d</en><de>Zufahrt %d</de><da>Indkørsel %d</da></text>
+        <text name="tl_adjustShifted"><en>moved %+.1f m</en><de>verschoben %+.1f m</de><da>flyttet %+.1f m</da></text>
+        <text name="tl_adjustOff"><en>no light</en><de>keine Ampel</de><da>intet lys</da></text>
+        <text name="tl_adjustStale"><en>%d outdated adjustments - reset deletes them</en><de>%d veraltete Anpassungen - Zurücksetzen löscht sie</de><da>%d forældede justeringer - nulstil sletter dem</da></text>
+        <text name="storeItem_trafficLightEU">
+            <en>Traffic Light (European)</en>
+            <de>Ampel (europäisch)</de>
+            <da>Lyskryds (europæisk)</da>
+        </text>
+        <text name="storeItem_trafficLightUS">
+            <en>Traffic Light (American)</en>
+            <de>Ampel (amerikanisch)</de>
+            <da>Lyskryds (amerikansk)</da>
+        </text>
+        <text name="function_trafficLight">
+            <en>Control box for a corner of an intersection: one approach at a time gets green</en>
+            <de>Schaltkasten für eine Ecke der Kreuzung: immer nur eine Zufahrt bekommt Grün</de>
+            <da>Styreboks til krydsets hjørne: kun én indkørsel ad gangen får grønt</da>
+        </text>
+        <text name="tl_alertOutOfOrder">
+            <en>%s near farmland %d is flashing amber: a vehicle is stuck in the intersection</en>
+            <de>%s bei Feldstück %d blinkt gelb: ein Fahrzeug steckt in der Kreuzung fest</de>
+            <da>%s ved jordlod %d blinker gult: et køretøj sidder fast i krydset</da>
+        </text>
+        <text name="tl_alertOutOfOrderNoFarmland">
+            <en>%s is flashing amber: a vehicle is stuck in the intersection</en>
+            <de>%s blinkt gelb: ein Fahrzeug steckt in der Kreuzung fest</de>
+            <da>%s blinker gult: et køretøj sidder fast i krydset</da>
+        </text>
+        <text name="tl_alertNoJunction">
+            <en>%s: no AutoDrive junction found here - place the control box closer to the junction</en>
+            <de>%s: hier keine AutoDrive-Kreuzung gefunden - Schaltkasten näher an die Kreuzung stellen</de>
+            <da>%s: intet AutoDrive-kryds fundet her - sæt styreboksen tættere på krydset</da>
+        </text>
+        <text name="tl_alertRecovered">
+            <en>%s is working normally again</en>
+            <de>%s funktioniert wieder normal</de>
+            <da>%s kører normalt igen</da>
+        </text>
+    </l10n>
+</modDesc>

@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8" standalone="no" ?>
+<placeable type="trafficLight" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://validation.gdn.giants-software.com/xml/fs25/placeable.xsd">
+    <storeData>
+        <name>$l10n_storeItem_trafficLightUS</name>
+        <functions>
+            <function>$l10n_function_trafficLight</function>
+        </functions>
+        <image>placeables/store_trafficLightUS.dds</image>
+        <price>2500</price>
+        <dailyUpkeep>1</dailyUpkeep>
+        <lifetime>1000</lifetime>
+        <rotation>0</rotation>
+        <brand>NONE</brand>
+        <species>PLACEABLE</species>
+        <category>decoration</category>
+        <brush>
+            <type>placeable</type>
+            <category>decoration</category>
+            <tab>uncategorized</tab>
+        </brush>
+        <canBeSold>true</canBeSold>
+        <showInStore>true</showInStore>
+    </storeData>
+
+    <base>
+        <filename>placeables/trafficLight.i3d</filename>
+        <canBeRenamed>true</canBeRenamed>
+        <boughtWithFarmland>false</boughtWithFarmland>
+    </base>
+
+    <placement useRandomYRotation="false" useManualYRotation="true"/>
+
+    <i3dMappings>
+        <i3dMapping id="areaStart" node="0>1|0"/>
+        <i3dMapping id="areaWidth" node="0>1|0|0"/>
+        <i3dMapping id="areaHeight" node="0>1|0|1"/>
+        <i3dMapping id="areaEnd" node="0>1|1"/>
+    </i3dMappings>
+
+    <!-- bittesmå områder (20 cm) kun for at undgå spillets advarsler: ingen terrænudjævning (vejen må ikke graves om) -->
+    <clearAreas>
+        <clearArea startNode="areaStart" widthNode="areaWidth" heightNode="areaHeight"/>
+    </clearAreas>
+    <!-- uden levelAreas: ingen terrændeformation overhovedet (elementet alene fjerner advarslen) -->
+    <leveling requireLeveling="false"/>
+    <indoorAreas>
+        <indoorArea startNode="areaStart" widthNode="areaWidth" heightNode="areaHeight"/>
+    </indoorAreas>
+    <ai>
+        <updateAreas>
+            <updateArea startNode="areaStart" endNode="areaEnd"/>
+        </updateAreas>
+    </ai>
+
+    <trafficLight variant="US"/>
+</placeable>

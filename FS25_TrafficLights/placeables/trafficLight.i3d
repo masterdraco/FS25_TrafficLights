@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<i3D name="trafficLight" version="1.6" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://i3d.giants.ch/schema/i3d-1.6.xsd">
+  <Asset>
+    <Export program="FS25_TrafficLights (handskrevet)" version="1"/>
+  </Asset>
+  <Files/>
+  <Materials/>
+  <Shapes/>
+  <Scene>
+    <TransformGroup name="trafficLight" nodeId="1">
+      <TransformGroup name="visuals" nodeId="2"/>
+      <TransformGroup name="areas" nodeId="3">
+        <TransformGroup name="areaStart" translation="-0.1 0 -0.1" nodeId="4">
+          <TransformGroup name="areaWidth" translation="0.2 0 0" nodeId="5"/>
+          <TransformGroup name="areaHeight" translation="0 0 0.2" nodeId="6"/>
+        </TransformGroup>
+        <TransformGroup name="areaEnd" translation="0.1 0 0.1" nodeId="7"/>
+      </TransformGroup>
+    </TransformGroup>
+  </Scene>
+</i3D>
