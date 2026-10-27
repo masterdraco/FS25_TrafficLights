@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.4 (2026-10-27)
+- Images in ModHub format: shop images 512x512 BC3 without mipmaps, aligned to the bottom;
+  mod icon 512x512 BC1 without mipmaps.
+
 ## 1.0.3 (2026-10-26)
 - ModHub prep: AutoDrive declared as a dependency in modDesc.
 - Log output and the `tlDebug`/`tlStatus` console texts are now English.
