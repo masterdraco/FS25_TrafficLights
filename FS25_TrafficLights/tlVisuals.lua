@@ -99,7 +99,7 @@ local function selectPole(a, index)
     a.pole = root ~= nil and findByName(root, choice.part) or nil
     a.poleShape = a.pole ~= nil and findByName(a.pole, "LOD0") or nil
     if a.poleShape == nil then
-        Logging.warning("%smasten nr. %s til wiren findes ikke - bruger armmasten", LOG_PREFIX, tostring(index))
+        Logging.warning("%sspan wire pole %s not found - using the arm mast", LOG_PREFIX, tostring(index))
     end
 end
 
@@ -114,7 +114,7 @@ local function loadAssets()
     if mastRoot ~= nil and mastRoot ~= 0 then table.insert(assets.roots, mastRoot) end
     if lampRoot ~= nil and lampRoot ~= 0 then table.insert(assets.roots, lampRoot) end
     if mastRoot == nil or mastRoot == 0 or lampRoot == nil or lampRoot == 0 then
-        Logging.warning("%skunne ikke indlæse spillets lyskurve-modeller - lysene vises ikke", LOG_PREFIX)
+        Logging.warning("%scould not load the game's traffic light models - lights are not shown", LOG_PREFIX)
         return nil
     end
     local allParts = true
@@ -133,7 +133,7 @@ local function loadAssets()
     assets.wireShape = wirePole ~= nil and findByName(wirePole, "LOD0") or nil
     selectPole(assets, TLVisuals.tuning.span.pole)
     if not assets.ok then
-        Logging.warning("%slyskurve-modellerne havde ikke de forventede noder - lysene vises ikke", LOG_PREFIX)
+        Logging.warning("%sthe traffic light models lack the expected nodes - lights are not shown", LOG_PREFIX)
         return nil
     end
     return assets
@@ -221,7 +221,7 @@ local function loadRailSegments()
                     previous = point
                 end
             end)
-            if not ok then Logging.warning("%skunne ikke læse en togbane: %s", LOG_PREFIX, tostring(err)) end
+            if not ok then Logging.warning("%scould not read a railway: %s", LOG_PREFIX, tostring(err)) end
         end
     end
     railSegments = segments

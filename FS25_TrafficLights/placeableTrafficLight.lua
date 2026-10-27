@@ -40,12 +40,12 @@ local function loadCabinet(placeable, variant)
     local cabinet = CABINETS[variant] or CABINETS.EU
     local root, requestId = g_i3DManager:loadSharedI3DFile(Utils.getFilename(cabinet.file, nil), false, false)
     if root == nil or root == 0 then
-        Logging.warning("%skunne ikke indlæse styreboksen (%s)", LOG_PREFIX, cabinet.file)
+        Logging.warning("%scould not load the control box (%s)", LOG_PREFIX, cabinet.file)
         return requestId
     end
     local template = findByName(root, cabinet.node)
     if template == nil then
-        Logging.warning("%sstyreboksen %s findes ikke i %s", LOG_PREFIX, cabinet.node, cabinet.file)
+        Logging.warning("%scontrol box node %s not found in %s", LOG_PREFIX, cabinet.node, cabinet.file)
     else
         local box = clone(template, false, false, false)
         link(placeable.rootNode, box)
@@ -112,7 +112,7 @@ end
 function PlaceableTrafficLight:onLoad(savegame)
     local spec = self[SPEC]
     if spec == nil then
-        Logging.error("%sspecialiseringen 'trafficLight' mangler i modDesc", LOG_PREFIX)
+        Logging.error("%sspecialization 'trafficLight' is missing in modDesc", LOG_PREFIX)
         return
     end
     spec.variant = self.xmlFile:getValue("placeable.trafficLight#variant", "EU")
@@ -134,7 +134,7 @@ function PlaceableTrafficLight:onLoad(savegame)
     spec.signalDirtyFlag = self:getNextDirtyFlag()
     spec.center = nil
     spec.cabinetRequestId = loadCabinet(self, spec.variant)
-    Logging.info("%sv%s lyskurv indlæst (%s)", LOG_PREFIX, modVersion(), spec.variant)
+    Logging.info("%sv%s traffic light loaded (%s)", LOG_PREFIX, modVersion(), spec.variant)
 end
 
 function PlaceableTrafficLight:onFinalizePlacement()
@@ -183,10 +183,10 @@ local function notifyOutOfOrder(placeable, spec, previousPhase, nowMs)
         end
         g_currentMission:addIngameNotification(FSBaseMission.INGAME_NOTIFICATION_CRITICAL, text)
         local stuckBy = spec.lastInput ~= nil and table.concat(spec.lastInput.occupiedBy or {}, ", ") or "?"
-        Logging.info("%sblinker gult (besked vist): %s - i zonen: %s", LOG_PREFIX, text, stuckBy)
+        Logging.info("%sflashing amber (message shown): %s - in the zone: %s", LOG_PREFIX, text, stuckBy)
     elseif previousPhase == "OUT_OF_ORDER" then
         spec.lastAlertMs = nil
-        Logging.info("%s%s kører normalt igen", LOG_PREFIX, name)
+        Logging.info("%s%s is working normally again", LOG_PREFIX, name)
         g_currentMission:addIngameNotification(FSBaseMission.INGAME_NOTIFICATION_OK,
             string.format(textOr("tl_alertRecovered", "%s is working normally again", placeable.customEnvironment), name))
     end
@@ -242,13 +242,13 @@ function PlaceableTrafficLight:publishLayout()
     local placeable, spec = self, self[SPEC]
     local ok, layout = pcall(TLVisuals.computeLayout, spec)
     if not ok then
-        Logging.warning("%skunne ikke beregne lysene: %s", LOG_PREFIX, tostring(layout))
+        Logging.warning("%scould not compute the lights: %s", LOG_PREFIX, tostring(layout))
         layout = nil
     end
     spec.layout = layout
     if placeable.isClient then
         local built, err = pcall(TLVisuals.buildLayout, spec, layout)
-        if not built then Logging.warning("%skunne ikke bygge lysene: %s", LOG_PREFIX, tostring(err)) end
+        if not built then Logging.warning("%scould not build the lights: %s", LOG_PREFIX, tostring(err)) end
     end
     spec.signals = {}
     spec.sentSignals = {}
@@ -277,7 +277,8 @@ function PlaceableTrafficLight:rebuildIntersection()
         if spec.disabledReason ~= "noJunction" then
             spec.disabledReason = "noJunction"
             spec.noJunctionNotified = false
-            Logging.warning("%sintet AutoDrive-kryds ved styreboksen (%.0f, %.0f) - lyskurven er slået fra", LOG_PREFIX,
+            -- brugerens placering, ikke en fejl i modden: info i loggen, skærmbeskeden nedenfor (ModHub: ingen Warning)
+            Logging.info("%sno AutoDrive junction at the control box (%.0f, %.0f) - the light is off", LOG_PREFIX,
                 placement.x, placement.z)
         end
         -- skærmbeskeden først, når AD's net er indlæst (ellers en falsk besked ved indlæsning af savegamet),
@@ -303,7 +304,13 @@ function PlaceableTrafficLight:rebuildIntersection()
             spec.staleOverrides = {}
             self:publishLayout()
             if spec.disabledReason ~= "overlap" then
-                Logging.warning("%slyskurven overlapper en anden lyskurv - den er slået fra; flyt den længere væk", LOG_PREFIX)
+                -- som "intet kryds": brugerens placering, så info i loggen og en skærmbesked (ModHub: ingen Warning)
+                Logging.info("%sthe light overlaps another traffic light - it is off; move it further away", LOG_PREFIX)
+                if g_currentMission ~= nil and g_currentMission.addIngameNotification ~= nil then
+                    g_currentMission:addIngameNotification(FSBaseMission.INGAME_NOTIFICATION_CRITICAL, string.format(textOr("tl_alertOverlap",
+                        "%s overlaps another traffic light and is off - move it further away", self.customEnvironment),
+                        self:getName() or "?"))
+                end
             end
             spec.disabledReason = "overlap"
             return
@@ -357,9 +364,9 @@ function PlaceableTrafficLight:rebuildIntersection()
     self:publishLayout()
 
     if #approaches == 0 then
-        Logging.info("%singen veje fundet ved (%.0f, %.0f) - tilføj stoplinjer i justeringsvisningen", LOG_PREFIX, center.x, center.z)
+        Logging.info("%sno roads found at (%.0f, %.0f) - add stop lines in the adjust view", LOG_PREFIX, center.x, center.z)
     else
-        Logging.info("%skryds ved (%.0f, %.0f): %d indkørsler med lys, %d trafikspor", LOG_PREFIX, center.x, center.z, withLights, trafficLanes)
+        Logging.info("%sintersection at (%.0f, %.0f): %d approaches with lights, %d traffic lanes", LOG_PREFIX, center.x, center.z, withLights, trafficLanes)
     end
 end
 
@@ -443,7 +450,7 @@ function PlaceableTrafficLight:runTrafficLightTick(adSnapshots, cpSnapshots, now
             local amberOwn = previous.phase == "AMBER" and approachId == previous.greenId
             if previous.phase ~= "IDLE" and not amberOwn and not committedBefore[approachId]
                 and not (input.trafficCommitted or {})[approachId] and not TLController.mayPass(previous, approachId) then
-                Logging.info("[TrafficLights] OVER FOR RØDT: indkørsel %s i kryds ved (%.0f, %.0f), fase %s",
+                Logging.info("[TrafficLights] RAN A RED: approach %s at intersection (%.0f, %.0f), phase %s",
                     tostring(approachId), intersection.center.x, intersection.center.z, tostring(previous.phase))
             end
         end
@@ -456,7 +463,7 @@ function PlaceableTrafficLight:runTrafficLightTick(adSnapshots, cpSnapshots, now
     if previous.phase == "IDLE" and spec.state.phase == "CLEARING" then spec.clearingAfterId = "IDLE" end
     -- en fejl i beskeden må ikke slippe holdene i denne takt (review)
     local notified, notifyError = pcall(notifyOutOfOrder, self, spec, previous.phase, nowMs)
-    if not notified then Logging.warning("%sbesked fejlede: %s", LOG_PREFIX, tostring(notifyError)) end
+    if not notified then Logging.warning("%smessage failed: %s", LOG_PREFIX, tostring(notifyError)) end
 
     for _, item in ipairs(holdList) do
         if not TLController.mayPass(spec.state, item.approachId) then
@@ -535,7 +542,7 @@ end
 local function applyLayout(spec, layout)
     spec.layout = layout
     local ok, err = pcall(TLVisuals.buildLayout, spec, layout)
-    if not ok then Logging.warning("%skunne ikke bygge lysene: %s", LOG_PREFIX, tostring(err)) end
+    if not ok then Logging.warning("%scould not build the lights: %s", LOG_PREFIX, tostring(err)) end
 end
 
 function PlaceableTrafficLight:onWriteStream(streamId, connection)

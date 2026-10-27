@@ -204,7 +204,7 @@ function TLAdjust:draw()
     setTextColor(1, 1, 1, 1)
     if not ok and not TLAdjust.drawErrorLogged then
         TLAdjust.drawErrorLogged = true
-        Logging.warning("[TrafficLights] justeringsvisningen fejlede: %s", tostring(err))
+        Logging.warning("[TrafficLights] adjust view failed: %s", tostring(err))
     end
 end
 

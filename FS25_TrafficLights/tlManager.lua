@@ -58,7 +58,7 @@ local function tick(nowMs)
             for vehicle in pairs(lightHolds) do holdLookup[vehicle] = true end
         else
             -- en fejlende lyskurv må aldrig efterlade spærringer (review)
-            Logging.warning("%slyskurv-takt fejlede: %s", LOG_PREFIX, tostring(err))
+            Logging.warning("%straffic light tick failed: %s", LOG_PREFIX, tostring(err))
             pcall(light.releaseTrafficLight, light)
         end
     end
@@ -76,17 +76,17 @@ function TLManager:update(dt)
         TLManager.hookInstalled = TLAutoDrive.installHoldHook(TLManager.shouldHoldAD)
     end
     if not TLAIDrive.hookInstalled and TLAIDrive.installHoldHook() then
-        Logging.info("[TrafficLights] hold for spillets AI-kørsel installeret")
+        Logging.info("[TrafficLights] hold for base-game AI driving installed")
     end
     TLManager.sinceTickMs = TLManager.sinceTickMs + dt
     if TLManager.sinceTickMs >= TLConfig.TICK_MS then
         TLManager.sinceTickMs = 0
-        if TLLoop ~= nil then pcall(TLLoop.update) end
+        if TLLoop ~= nil then pcall(TLLoop.update) end -- tools/tlLoop.lua (testværktøj, ikke i udgivelsen)
         local ok, err = pcall(tick, g_time)
         if not ok then
             -- intet hold må overleve en fejlende takt (ellers holdes AD-køretøjer for evigt — review)
             TLManager.holdLookup = {}
-            Logging.warning("%stakt fejlede: %s", LOG_PREFIX, tostring(err))
+            Logging.warning("%stick failed: %s", LOG_PREFIX, tostring(err))
         end
     end
 end
@@ -115,7 +115,7 @@ function TLManager:consoleStatus()
         count = count + 1
         TLManager.logStatus(light)
     end
-    return string.format("tlStatus: %d lyskurv(e) - se log.txt", count)
+    return string.format("tlStatus: %d traffic light(s) - see log.txt", count)
 end
 
 function TLManager.logStatus(light)
@@ -123,18 +123,18 @@ function TLManager.logStatus(light)
         if spec == nil or spec.state == nil then return end
         local intersection = spec.intersection
         local state, input = spec.state, spec.lastInput
-        Logging.info("%sstatus: kryds ved (%.0f, %.0f): fase %s, grøn %s, %s", LOG_PREFIX,
+        Logging.info("%sstatus: intersection at (%.0f, %.0f): phase %s, green %s, %s", LOG_PREFIX,
             intersection and intersection.center.x or 0, intersection and intersection.center.z or 0,
-            tostring(state.phase), tostring(state.greenId), spec.disabledReason or "aktiv")
+            tostring(state.phase), tostring(state.greenId), spec.disabledReason or "active")
         if input ~= nil then
             local parts = {}
             for id, approach in pairs(input.approaches or {}) do
-                table.insert(parts, string.format("%s:%s%s%s", tostring(id), approach.enabled and "til" or "fra",
-                    approach.demand and ",venter" or "", (input.exitRoom or {})[id] == false and ",udkørsel fuld" or ""))
+                table.insert(parts, string.format("%s:%s%s%s", tostring(id), approach.enabled and "on" or "off",
+                    approach.demand and ",waiting" or "", (input.exitRoom or {})[id] == false and ",exit full" or ""))
             end
             table.sort(parts)
-            Logging.info("%sstatus:   indkørsler %s", LOG_PREFIX, table.concat(parts, "  "))
-            Logging.info("%sstatus:   optaget=%s (%s), fastkørt %d ms, rydning %s ms", LOG_PREFIX, tostring(input.zoneOccupied),
+            Logging.info("%sstatus:   approaches %s", LOG_PREFIX, table.concat(parts, "  "))
+            Logging.info("%sstatus:   occupied=%s (%s), stuck %d ms, clearing %s ms", LOG_PREFIX, tostring(input.zoneOccupied),
                 table.concat(input.occupiedBy or {}, ", "), input.zoneStuckMs or 0, tostring(input.trafficClearMs))
         end
         for _, approach in ipairs(intersection and intersection.approaches or {}) do
@@ -145,16 +145,16 @@ function TLManager.logStatus(light)
                         local ok, px, _, pz = pcall(getSplinePosition, lane.splineId, lane.splineTime)
                         if ok then x, z = px, pz end
                     end
-                    Logging.info("%sstatus:   trafikspor ved indkørsel %s: spor %s t=%.4f ved (%s, %s) %s", LOG_PREFIX,
+                    Logging.info("%sstatus:   traffic lane at approach %s: spline %s t=%.4f at (%s, %s) %s", LOG_PREFIX,
                         tostring(approach.id), tostring(lane.splineId), lane.splineTime or -1,
                         x and string.format("%.1f", x) or "?", z and string.format("%.1f", z) or "?",
-                        lane.blocked and "SPÆRRET" or "åben")
+                        lane.blocked and "BLOCKED" or "open")
                 end
             end
         end
         for _, item in ipairs(spec.lastHoldList or {}) do
             -- kun dem, der faktisk holdes (holdlisten har også dem ved en grøn stoplinje)
-            if not TLController.mayPass(state, item.approachId) then Logging.info("%sstatus:   holdes: %s (%s) ved indkørsel %s", LOG_PREFIX,
+            if not TLController.mayPass(state, item.approachId) then Logging.info("%sstatus:   held: %s (%s) at approach %s", LOG_PREFIX,
                 item.key ~= nil and item.key.getName ~= nil and item.key:getName() or tostring(item.key), tostring(item.kind), tostring(item.approachId)) end
         end
 end
@@ -165,19 +165,19 @@ TLVisuals.rebuildAll = function()
         local spec = light:getTrafficLightSpec()
         if spec ~= nil and spec.intersection ~= nil then
             local ok, err = pcall(light.publishLayout, light)
-            if not ok then Logging.warning("%slys kunne ikke bygges om: %s", LOG_PREFIX, tostring(err)) end
+            if not ok then Logging.warning("%slights could not be rebuilt: %s", LOG_PREFIX, tostring(err)) end
         end
     end
 end
 
 function TLManager:consoleDebug()
     TLManager.debugDraw = not TLManager.debugDraw
-    return "tlDebug: " .. (TLManager.debugDraw and "til" or "fra")
+    return "tlDebug: " .. (TLManager.debugDraw and "on" or "off")
 end
 
 if addConsoleCommand ~= nil then
-    addConsoleCommand("tlDebug", "Lyskurve: vis/skjul konfliktzone, stoplinjer og signaler", "consoleDebug", TLManager)
-    addConsoleCommand("tlStatus", "Lyskurve: skriv hver lyskurvs tilstand i log.txt", "consoleStatus", TLManager)
+    addConsoleCommand("tlDebug", "Traffic Lights: show/hide conflict zone, stop lines and signals", "consoleDebug", TLManager)
+    addConsoleCommand("tlStatus", "Traffic Lights: write the state of every traffic light to log.txt", "consoleStatus", TLManager)
 end
 
 addModEventListener(TLManager)

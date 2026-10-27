@@ -173,7 +173,7 @@ function TLAutoDrive.installHoldHook(shouldHold)
             end
             return blocked
         end
-        Logging.info("%sAutoDrive-hold installeret", LOG_PREFIX)
+        Logging.info("%sAutoDrive hold installed", LOG_PREFIX)
     end
     -- AD's vejpunkt-regel (detectAdTrafficOnRoute) lader et køretøj vente på et andet, hvis ruterne fletter
     -- (fælles vejpunkt). En bil, der holder for rødt ved stoplinjen, har sine næste vejpunkter inde i

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <modDesc descVersion="107">
     <author>masterdraco</author>
-    <version>1.0.2.0</version>
+    <version>1.0.3.0</version>
     <title>
         <en>Traffic Lights</en>
         <de>Ampeln</de>
@@ -40,6 +40,9 @@ Benötigt AutoDrive. Helfer des Grundspiels und die Anfahrt von Courseplay halte
 Kræver AutoDrive. Spillets hjælpere og Courseplays tur ud til marken holder også, på kort med AI-vejnet.]]></da>
     </description>
     <iconFilename>icon_trafficLights.dds</iconFilename>
+    <dependencies>
+        <dependency>FS25_AutoDrive</dependency>
+    </dependencies>
     <multiplayer supported="true"/>
 
     <extraSourceFiles>
@@ -53,7 +56,6 @@ Kræver AutoDrive. Spillets hjælpere og Courseplays tur ud til marken holder og
         <sourceFile filename="tlAIDrive.lua"/>
         <sourceFile filename="tlNet.lua"/>
         <sourceFile filename="tlVisuals.lua"/>
-        <sourceFile filename="tlLoop.lua"/>
         <sourceFile filename="tlManager.lua"/>
         <sourceFile filename="tlEvents.lua"/>
         <sourceFile filename="tlAdjust.lua"/>
@@ -131,6 +133,11 @@ Kræver AutoDrive. Spillets hjælpere og Courseplays tur ud til marken holder og
             <en>%s: no AutoDrive junction found here - place the control box closer to the junction</en>
             <de>%s: hier keine AutoDrive-Kreuzung gefunden - Schaltkasten näher an die Kreuzung stellen</de>
             <da>%s: intet AutoDrive-kryds fundet her - sæt styreboksen tættere på krydset</da>
+        </text>
+        <text name="tl_alertOverlap">
+            <en>%s overlaps another traffic light and is off - move it further away</en>
+            <de>%s überschneidet sich mit einer anderen Ampel und ist aus - weiter weg stellen</de>
+            <da>%s overlapper et andet lyskryds og er slået fra - flyt det længere væk</da>
         </text>
         <text name="tl_alertRecovered">
             <en>%s is working normally again</en>

@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.3 (2026-10-26)
+- ModHub prep: AutoDrive declared as a dependency in modDesc.
+- Log output and the `tlDebug`/`tlStatus` console texts are now English.
+- A light placed with no AutoDrive junction or overlapping another light logs info instead of a warning;
+  overlap now also shows an on-screen message (like "no junction").
+- New shop images (EU mast, US span wire) and mod icon made from in-game screenshots.
+- The `tlLoop` test tool moved out of the mod to `tools/` (not shipped).
+
 ## 1.0.2 (2026-10-25)
 - Street lamp on the taller EU mast sits on the pole again (no gap).
 
