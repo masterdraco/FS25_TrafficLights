@@ -135,7 +135,7 @@ end
 
 function TLAdjust.installInputHook()
     if PlayerInputComponent == nil or PlayerInputComponent.registerGlobalPlayerActionEvents == nil then return end
-    PlayerInputComponent.tlRegisterHandler = function(component) pcall(registerActions, component) end
+    PlayerInputComponent.tlRegisterHandler = function(component) registerActions(component) end
     if PlayerInputComponent.tlHooked then return end
     -- kun til fods: et køretøj kalder den også (med sin context), og så ville vores id'er pege på køretøjets
     -- events, mens spillerens stod slukket (review H1)
@@ -195,17 +195,13 @@ local function drawView()
     end
 end
 
--- Tekststilen nulstilles uanset fejl (samme mønster som ADRoutePlanner.drawHud).
+-- Tekststilen nulstilles efter visningen (samme mønster som ADRoutePlanner.drawHud).
 function TLAdjust:draw()
     if TLAdjust.active == nil then return end
     setTextBold(false)
-    local ok, err = pcall(drawView)
+    drawView()
     setTextAlignment(RenderText.ALIGN_LEFT)
     setTextColor(1, 1, 1, 1)
-    if not ok and not TLAdjust.drawErrorLogged then
-        TLAdjust.drawErrorLogged = true
-        Logging.warning("[TrafficLights] adjust view failed: %s", tostring(err))
-    end
 end
 
 if g_currentModName ~= nil then

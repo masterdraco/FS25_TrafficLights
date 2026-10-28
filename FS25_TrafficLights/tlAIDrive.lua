@@ -86,8 +86,8 @@ function TLAIDrive.snapshots()
     local snapshots = {}
     for _, vehicle in ipairs(g_currentMission.vehicleSystem.vehicles) do
         if isNavigating(vehicle) then
-            local ok, snapshot = pcall(snapshotOf, vehicle)
-            if ok and snapshot ~= nil then table.insert(snapshots, snapshot) end
+            local snapshot = snapshotOf(vehicle)
+            if snapshot ~= nil then table.insert(snapshots, snapshot) end
         end
     end
     return snapshots

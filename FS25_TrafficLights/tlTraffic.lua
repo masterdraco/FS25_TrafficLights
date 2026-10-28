@@ -35,9 +35,7 @@ end
 
 local function findRaw(x, y, z, heading)
     local find = engine("findTrafficSystemBlockingPositionInformation")
-    local ok, splineId, splineTime = pcall(find, TLTraffic.systemId(), x, y, z, math.cos(heading), 0, math.sin(heading), LANE_SEARCH_M)
-    if not ok then return nil, nil end
-    return splineId, splineTime
+    return find(TLTraffic.systemId(), x, y, z, math.cos(heading), 0, math.sin(heading), LANE_SEARCH_M)
 end
 
 local DIRECTION_PROBE_M = 3
@@ -75,8 +73,7 @@ function TLTraffic.setBlocked(lane, blocked)
     local set = engine("setTrafficSystemBlockingPositionState")
     local tsId = TLTraffic.systemId()
     if set == nil or tsId == nil then return lane end
-    local ok = pcall(set, tsId, lane.splineId, lane.splineTime, blocked)
-    if not ok then return lane end
+    set(tsId, lane.splineId, lane.splineTime, blocked)
     -- alle felter bevares (kind = "TRAFFIC" m.fl.): in-game 25/10 mistede sporet sit kind efter første
     -- spærring, blev aldrig genkendt igen og forblev spærret for evigt
     local copy = {}

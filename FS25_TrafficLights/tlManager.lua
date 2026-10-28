@@ -3,6 +3,8 @@
 TLManager = {}
 TLManager.lights = {}
 TLManager.holdLookup = {}     -- AD-køretøj -> true, når det skal holde for rødt (læses af AD-hooket)
+TLManager.tickState = {}      -- pr. lyskurv: running (takt i gang) og retryAt (pause efter en fejl)
+local TICK_FAIL_PAUSE_MS = 10000
 TLManager.debugDraw = TLConfig.DEBUG
 TLManager.sinceTickMs = 0
 TLManager.hookInstalled = false
@@ -49,17 +51,29 @@ local function tick(nowMs)
     for _, snapshot in ipairs(TLAIDrive.snapshots()) do
         if not seen[snapshot.key] then table.insert(cpSnapshots, snapshot) end
     end
+    -- Fejlsikring uden pcall (ModHub tillader det ikke): intet hold må overleve en fejlende takt (ellers
+    -- holdes AD-køretøjer for evigt — review), så tabellen tømmes FØR takten. En lyskurv, hvis takt kastede
+    -- en Lua-fejl, står med running = true næste gang: den slippes (trafikspor åbnes) og holder pause,
+    -- så de øvrige lyskurve kører videre. Fejlen selv står i log.txt.
+    TLManager.holdLookup = {}
     local holdLookup = {}
     for light in pairs(TLManager.lights) do
-        -- hver lyskurv skriver sine hold lokalt; de flettes kun ind, når taktens gik godt (review)
-        local lightHolds = {}
-        local ok, err = pcall(light.runTrafficLightTick, light, adSnapshots, cpSnapshots, nowMs, lightHolds)
-        if ok then
+        local run = TLManager.tickState[light] or {}
+        TLManager.tickState[light] = run
+        if run.running then
+            run.running = false
+            run.retryAt = nowMs + TICK_FAIL_PAUSE_MS
+            Logging.warning("%straffic light tick failed (see the error above); released, retrying in %d s",
+                LOG_PREFIX, TICK_FAIL_PAUSE_MS / 1000)
+            light:releaseTrafficLight()
+        end
+        if run.retryAt == nil or nowMs >= run.retryAt then
+            run.retryAt = nil
+            local lightHolds = {}
+            run.running = true
+            light:runTrafficLightTick(adSnapshots, cpSnapshots, nowMs, lightHolds)
+            run.running = false
             for vehicle in pairs(lightHolds) do holdLookup[vehicle] = true end
-        else
-            -- en fejlende lyskurv må aldrig efterlade spærringer (review)
-            Logging.warning("%straffic light tick failed: %s", LOG_PREFIX, tostring(err))
-            pcall(light.releaseTrafficLight, light)
         end
     end
     TLManager.holdLookup = holdLookup
@@ -69,7 +83,7 @@ function TLManager:update(dt)
     -- lamperne (også blinkende gult) opdateres hver frame, på alle maskiner med skærm
     for light in pairs(TLManager.visualLights) do
         local spec = light:getTrafficLightSpec()
-        if spec ~= nil and spec.visualHeads ~= nil then pcall(TLVisuals.update, spec, g_time) end
+        if spec ~= nil and spec.visualHeads ~= nil then TLVisuals.update(spec, g_time) end
     end
     if g_server == nil then return end
     if not TLManager.hookInstalled then
@@ -81,31 +95,27 @@ function TLManager:update(dt)
     TLManager.sinceTickMs = TLManager.sinceTickMs + dt
     if TLManager.sinceTickMs >= TLConfig.TICK_MS then
         TLManager.sinceTickMs = 0
-        if TLLoop ~= nil then pcall(TLLoop.update) end -- tools/tlLoop.lua (testværktøj, ikke i udgivelsen)
-        local ok, err = pcall(tick, g_time)
-        if not ok then
-            -- intet hold må overleve en fejlende takt (ellers holdes AD-køretøjer for evigt — review)
-            TLManager.holdLookup = {}
-            Logging.warning("%stick failed: %s", LOG_PREFIX, tostring(err))
-        end
+        if TLLoop ~= nil then TLLoop.update() end -- tools/tlLoop.lua (testværktøj, ikke i udgivelsen)
+        tick(g_time)
     end
 end
 
 function TLManager:draw()
     if not TLManager.debugDraw then return end
-    for light in pairs(TLManager.lights) do pcall(light.drawTrafficLightDebug, light) end
+    for light in pairs(TLManager.lights) do light:drawTrafficLightDebug() end
 end
 
 function TLManager:deleteMap()
     for light in pairs(TLManager.lights) do
-        pcall(light.releaseTrafficLight, light)
+        light:releaseTrafficLight()
     end
     TLManager.lights = {}
     TLManager.visualLights = {}
     TLManager.holdLookup = {}
+    TLManager.tickState = {}
     TLManager.hookInstalled = false
     TLAutoDrive.uninstall()
-    pcall(TLVisuals.releaseAssets)
+    TLVisuals.releaseAssets()
 end
 
 -- tlStatus: hver lyskurvs tilstand i log.txt (fase, efterspørgsel, hvem der optager krydset, hold)
@@ -142,8 +152,8 @@ function TLManager.logStatus(light)
                 if lane.kind == "TRAFFIC" then
                     local x, z = nil, nil
                     if getSplinePosition ~= nil then
-                        local ok, px, _, pz = pcall(getSplinePosition, lane.splineId, lane.splineTime)
-                        if ok then x, z = px, pz end
+                        local px, _, pz = getSplinePosition(lane.splineId, lane.splineTime)
+                        x, z = px, pz
                     end
                     Logging.info("%sstatus:   traffic lane at approach %s: spline %s t=%.4f at (%s, %s) %s", LOG_PREFIX,
                         tostring(approach.id), tostring(lane.splineId), lane.splineTime or -1,
@@ -164,8 +174,7 @@ TLVisuals.rebuildAll = function()
     for light in pairs(TLManager.lights) do
         local spec = light:getTrafficLightSpec()
         if spec ~= nil and spec.intersection ~= nil then
-            local ok, err = pcall(light.publishLayout, light)
-            if not ok then Logging.warning("%slights could not be rebuilt: %s", LOG_PREFIX, tostring(err)) end
+            light:publishLayout()
         end
     end
 end

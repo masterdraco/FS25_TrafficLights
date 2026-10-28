@@ -210,18 +210,14 @@ local function loadRailSegments()
     for _, placeable in ipairs(system.placeables) do
         local spline = placeable.spec_trainSystem ~= nil and placeable.getSpline ~= nil and placeable:getSpline() or nil
         if spline ~= nil and entityExists(spline) then
-            -- en fejlende spline må ikke tage lyskurvene med sig: den springes over
-            local ok, err = pcall(function()
-                local count = math.max(2, math.ceil(getSplineLength(spline) / RAIL_SAMPLE_M))
-                local previous = nil
-                for i = 0, count do
-                    local x, _, z = getSplinePosition(spline, i / count)
-                    local point = {x = x, z = z}
-                    if previous ~= nil then table.insert(segments, {a = previous, b = point}) end
-                    previous = point
-                end
-            end)
-            if not ok then Logging.warning("%scould not read a railway: %s", LOG_PREFIX, tostring(err)) end
+            local count = math.max(2, math.ceil(getSplineLength(spline) / RAIL_SAMPLE_M))
+            local previous = nil
+            for i = 0, count do
+                local x, _, z = getSplinePosition(spline, i / count)
+                local point = {x = x, z = z}
+                if previous ~= nil then table.insert(segments, {a = previous, b = point}) end
+                previous = point
+            end
         end
     end
     railSegments = segments

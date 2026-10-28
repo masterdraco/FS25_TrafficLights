@@ -57,8 +57,8 @@ end
 function TLAutoDrive.edgesNear(center, radius)
     local env = adEnv()
     if env == nil then return {} end
-    local ok, wps = pcall(env.ADGraphManager.getWayPoints, env.ADGraphManager)
-    if not ok then return {} end
+    if env.ADGraphManager == nil or env.ADGraphManager.getWayPoints == nil then return {} end
+    local wps = env.ADGraphManager:getWayPoints()
     return TLAutoDrive.edgesFromWayPoints(wps, center, radius + TLConfig.DEMAND_DISTANCE)
 end
 
@@ -101,8 +101,9 @@ local function vehicleFront(vehicle)
 end
 
 local function trainLength(env, vehicle)
-    local ok, length = pcall(env.AutoDrive.getTractorTrainLength, vehicle, true, false)
-    if ok and type(length) == "number" and length > 0 then return length end
+    if env.AutoDrive.getTractorTrainLength == nil then return nil end
+    local length = env.AutoDrive.getTractorTrainLength(vehicle, true, false)
+    if type(length) == "number" and length > 0 then return length end
     return nil
 end
 
@@ -116,8 +117,7 @@ end
 -- Snapshot for hvert AD-køretøj. route kun mens det aktivt kører mod et mål (tlDemand-kontrakten).
 local function isCourseplayDriving(vehicle)
     if vehicle.getIsCpActive == nil then return false end
-    local ok, active = pcall(vehicle.getIsCpActive, vehicle)
-    return ok and active == true
+    return vehicle:getIsCpActive() == true
 end
 
 local function isGameAINavigating(vehicle)
@@ -134,19 +134,17 @@ function TLAutoDrive.snapshots()
         -- anhængere har også .ad (uden stateModule); CP-kørende køretøjer kommer fra tlCourseplay (review),
         -- og køretøjer på spillets AI-navigation fra tlAIDrive (samme nøgle to gange ville blande sporingen)
         if ad ~= nil and ad.stateModule ~= nil and not isCourseplayDriving(vehicle) and not isGameAINavigating(vehicle) then
-            local ok, snapshot = pcall(function()
-                local front = vehicleFront(vehicle)
-                if front == nil then return nil end
+            local front = vehicleFront(vehicle)
+            if front ~= nil then
                 local route = nil
                 if isDrivingRoute(ad) then
                     local wayPoints, index = ad.drivePathModule:getWayPoints()
                     route = TLAutoDrive.routeFromWayPoints(wayPoints, index, ROUTE_POINTS)
                 end
                 local speed = vehicle.getLastSpeed ~= nil and vehicle:getLastSpeed() / 3.6 or 0
-                return {key = vehicle, kind = "AD", name = vehicle.getName ~= nil and vehicle:getName() or "AD",
-                    pos = front, speed = speed, route = route, length = trainLength(env, vehicle)}
-            end)
-            if ok and snapshot ~= nil then table.insert(snapshots, snapshot) end
+                table.insert(snapshots, {key = vehicle, kind = "AD", name = vehicle.getName ~= nil and vehicle:getName() or "AD",
+                    pos = front, speed = speed, route = route, length = trainLength(env, vehicle)})
+            end
         end
     end
     return snapshots
@@ -168,8 +166,7 @@ function TLAutoDrive.installHoldHook(shouldHold)
             if blocked then return blocked end
             local hook = G.TrafficLights ~= nil and G.TrafficLights.shouldHoldAD or nil
             if hook ~= nil then
-                local ok, hold = pcall(hook, self.vehicle)
-                if ok and hold then return true end
+                if hook(self.vehicle) then return true end
             end
             return blocked
         end
@@ -186,8 +183,7 @@ function TLAutoDrive.installHoldHook(shouldHold)
             if waiting and self.trafficVehicle ~= nil then
                 local hook = G.TrafficLights ~= nil and G.TrafficLights.shouldHoldAD or nil
                 if hook ~= nil then
-                    local ok, held = pcall(hook, self.trafficVehicle)
-                    if ok and held then
+                    if hook(self.trafficVehicle) then
                         self.trafficVehicle = nil -- andre må ikke tro, at vi selv venter (review)
                         return false
                     end
@@ -210,6 +206,5 @@ end
 G.TrafficLights.isHolding = function(vehicle)
     local hook = G.TrafficLights.shouldHoldAD
     if hook == nil or vehicle == nil then return false end
-    local ok, hold = pcall(hook, vehicle)
-    return ok and hold == true
+    return hook(vehicle) == true
 end

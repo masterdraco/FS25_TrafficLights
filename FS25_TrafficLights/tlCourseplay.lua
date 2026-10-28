@@ -8,8 +8,7 @@ local ROUTE_POINTS = 30
 
 local function isCpActive(vehicle)
     if vehicle.getIsCpActive == nil or vehicle.getCpDriveStrategy == nil then return false end
-    local ok, active = pcall(vehicle.getIsCpActive, vehicle)
-    return ok and active == true
+    return vehicle:getIsCpActive() == true
 end
 
 local function vehicleFront(vehicle)
@@ -45,19 +44,17 @@ function TLCourseplay.snapshots()
     local snapshots = {}
     for _, vehicle in ipairs(g_currentMission.vehicleSystem.vehicles) do
         if isCpActive(vehicle) then
-            local ok, snapshot = pcall(function()
-                local front = vehicleFront(vehicle)
-                local strategy = vehicle:getCpDriveStrategy()
-                if front == nil or strategy == nil then return nil end
+            local front = vehicleFront(vehicle)
+            local strategy = vehicle:getCpDriveStrategy()
+            if front ~= nil and strategy ~= nil then
                 local speed = vehicle.getLastSpeed ~= nil and vehicle:getLastSpeed() / 3.6 or 0
                 -- rute kun under transit ud til marken: under markarbejde er kursen markbanen, og en mark tæt
                 -- ved et kryds måtte ikke få traktoren holdt (review). Aflæsseren (UnloadCombine) kører på
                 -- pathfinder-kurser og tages med, når den kan testes i spillet.
                 local inTransit = vehicle.getIsCpDriveToFieldWorkActive ~= nil and vehicle:getIsCpDriveToFieldWorkActive()
-                return {key = vehicle, kind = "CP", name = vehicle.getName ~= nil and vehicle:getName() or "CP",
-                    pos = front, speed = speed, route = inTransit and upcomingRoute(strategy) or nil}
-            end)
-            if ok and snapshot ~= nil then table.insert(snapshots, snapshot) end
+                table.insert(snapshots, {key = vehicle, kind = "CP", name = vehicle.getName ~= nil and vehicle:getName() or "CP",
+                    pos = front, speed = speed, route = inTransit and upcomingRoute(strategy) or nil})
+            end
         end
     end
     return snapshots
@@ -65,5 +62,5 @@ end
 
 function TLCourseplay.hold(vehicle)
     if vehicle == nil or vehicle.cpHold == nil then return end
-    pcall(vehicle.cpHold, vehicle, TLConfig.CP_HOLD_MS)
+    vehicle:cpHold(TLConfig.CP_HOLD_MS)
 end

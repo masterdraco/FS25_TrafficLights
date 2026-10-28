@@ -240,15 +240,10 @@ end
 -- Signalerne startes forfra (gamle indkørsels-id'er må ikke hænge ved — review); næste takt sætter dem.
 function PlaceableTrafficLight:publishLayout()
     local placeable, spec = self, self[SPEC]
-    local ok, layout = pcall(TLVisuals.computeLayout, spec)
-    if not ok then
-        Logging.warning("%scould not compute the lights: %s", LOG_PREFIX, tostring(layout))
-        layout = nil
-    end
+    local layout = TLVisuals.computeLayout(spec)
     spec.layout = layout
     if placeable.isClient then
-        local built, err = pcall(TLVisuals.buildLayout, spec, layout)
-        if not built then Logging.warning("%scould not build the lights: %s", LOG_PREFIX, tostring(err)) end
+        TLVisuals.buildLayout(spec, layout)
     end
     spec.signals = {}
     spec.sentSignals = {}
@@ -461,9 +456,7 @@ function PlaceableTrafficLight:runTrafficLightTick(adSnapshots, cpSnapshots, now
     spec.state = TLController.update(previous, input, nowMs, TLConfig)
     if previous.phase == "AMBER" and spec.state.phase == "CLEARING" then spec.clearingAfterId = previous.greenId end
     if previous.phase == "IDLE" and spec.state.phase == "CLEARING" then spec.clearingAfterId = "IDLE" end
-    -- en fejl i beskeden må ikke slippe holdene i denne takt (review)
-    local notified, notifyError = pcall(notifyOutOfOrder, self, spec, previous.phase, nowMs)
-    if not notified then Logging.warning("%smessage failed: %s", LOG_PREFIX, tostring(notifyError)) end
+    notifyOutOfOrder(self, spec, previous.phase, nowMs)
 
     for _, item in ipairs(holdList) do
         if not TLController.mayPass(spec.state, item.approachId) then
@@ -515,8 +508,8 @@ function PlaceableTrafficLight:drawTrafficLightDebug()
     for _, approach in ipairs(intersection.approaches) do
         for _, lane in ipairs(approach.lanes or {}) do
             if lane.kind == "TRAFFIC" and lane.splineId ~= nil and getSplinePosition ~= nil then
-                local ok, x, ly, z = pcall(getSplinePosition, lane.splineId, lane.splineTime)
-                if ok and x ~= nil then
+                local x, ly, z = getSplinePosition(lane.splineId, lane.splineTime)
+                if x ~= nil then
                     local r, g = lane.blocked and 1 or 0, lane.blocked and 0 or 1
                     DebugUtil.drawDebugLine(x, ly, z, x, ly + 4, z, r, g, 0)
                     Utils.renderTextAtWorldPosition(x, ly + 4.3, z, string.format("spor %d", approach.id),
@@ -541,8 +534,7 @@ end
 -- Multiplayer: en ny klient får layout og signaler ved tilslutning; derefter kun ændringer (dirty-flag).
 local function applyLayout(spec, layout)
     spec.layout = layout
-    local ok, err = pcall(TLVisuals.buildLayout, spec, layout)
-    if not ok then Logging.warning("%scould not build the lights: %s", LOG_PREFIX, tostring(err)) end
+    TLVisuals.buildLayout(spec, layout)
 end
 
 function PlaceableTrafficLight:onWriteStream(streamId, connection)

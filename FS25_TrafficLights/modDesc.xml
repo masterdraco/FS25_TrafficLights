@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
-<modDesc descVersion="107">
+<modDesc descVersion="115">
     <author>masterdraco</author>
-    <version>1.0.4.0</version>
+    <version>1.0.5.0</version>
     <title>
         <en>Traffic Lights</en>
         <de>Ampeln</de>
@@ -17,7 +17,13 @@
 - Adjust stop lines on foot: Alt+T near the light.
 - Multiplayer supported.
 
-Requires AutoDrive. Base-game helpers and Courseplay's drive to the field also stop on maps with an AI road network.]]></en>
+Requires AutoDrive. Base-game helpers and Courseplay's drive to the field also stop on maps with an AI road network.
+
+Changelog 1.0.5.0:
+- Updated for game version 1.25.
+- Shop images and mod icon in ModHub format.
+- AutoDrive declared as a dependency; log output in English.
+- Errors are no longer caught silently; they show up in the log (ModHub guideline).]]></en>
         <de><![CDATA[Ampeln für Kreuzungen. Immer nur eine Zufahrt bekommt Grün, damit sich AutoDrive-Fahrzeuge und der Kartenverkehr nie mitten in der Kreuzung festfahren.
 
 - Den Schaltkasten an eine Ecke der Kreuzung stellen: die Ampel findet die Kreuzung über das AutoDrive-Netz und setzt Haltelinien so weit zurück, dass lange Anhänger abbiegen können - nie auf einem Bahnübergang.
@@ -27,7 +33,13 @@ Requires AutoDrive. Base-game helpers and Courseplay's drive to the field also s
 - Haltelinien zu Fuß anpassen: Alt+T an der Ampel.
 - Mehrspieler unterstützt.
 
-Benötigt AutoDrive. Helfer des Grundspiels und die Anfahrt von Courseplay halten ebenfalls, auf Karten mit KI-Straßennetz.]]></de>
+Benötigt AutoDrive. Helfer des Grundspiels und die Anfahrt von Courseplay halten ebenfalls, auf Karten mit KI-Straßennetz.
+
+Changelog 1.0.5.0:
+- Angepasst an Spielversion 1.25.
+- Shop-Bilder und Mod-Symbol im ModHub-Format.
+- AutoDrive als Abhängigkeit eingetragen; Log-Ausgaben auf Englisch.
+- Fehler werden nicht mehr stillschweigend abgefangen, sondern erscheinen im Log (ModHub-Richtlinie).]]></de>
         <da><![CDATA[Lyskryds til vejkryds. Kun én indkørsel ad gangen får grønt, så AutoDrive-køretøjer og kortets egen trafik aldrig låser sig fast midt i krydset.
 
 - Sæt styreboksen på et hjørne af krydset: lyskrydset finder krydset ud fra AutoDrive-nettet og sætter stoplinjer så langt tilbage, at lange vogntog kan svinge - aldrig på en jernbaneoverkørsel.
@@ -37,7 +49,13 @@ Benötigt AutoDrive. Helfer des Grundspiels und die Anfahrt von Courseplay halte
 - Justér stoplinjer til fods: Alt+T ved lyskrydset.
 - Multiplayer understøttet.
 
-Kræver AutoDrive. Spillets hjælpere og Courseplays tur ud til marken holder også, på kort med AI-vejnet.]]></da>
+Kræver AutoDrive. Spillets hjælpere og Courseplays tur ud til marken holder også, på kort med AI-vejnet.
+
+Changelog 1.0.5.0:
+- Opdateret til spilversion 1.25.
+- Butiksbilleder og mod-ikon i ModHub-format.
+- AutoDrive angivet som afhængighed; logtekster på engelsk.
+- Fejl fanges ikke længere stille; de ses i loggen (ModHub-retningslinje).]]></da>
     </description>
     <iconFilename>icon_trafficLights.dds</iconFilename>
     <dependencies>

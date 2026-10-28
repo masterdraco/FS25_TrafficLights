@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.5 (2026-10-28)
+- descVersion 115 (game 1.25); changelog in the shop description (ModHub TestRunner: ModDescCheck).
+- All 31 `pcall`/`xpcall` removed (ModHub TestRunner: PublicLuaCheck flags them). External APIs (AutoDrive,
+  Courseplay, engine traffic system) are guarded with nil checks instead; a Lua error now reaches log.txt.
+  The tick clears `holdLookup` before running, so a failing tick leaves no vehicle held; a light whose tick
+  threw is released (lanes opened) and paused for 10 s while the other lights keep running (`tests/test_tlManager.lua`).
+- Passes TestRunner 0.9.23 on Linux (`testrunner FS25_TrafficLights.zip`).
+
 ## 1.0.4 (2026-10-27)
 - Images in ModHub format: shop images 512x512 BC3 without mipmaps, aligned to the bottom;
   mod icon 512x512 BC1 without mipmaps.
